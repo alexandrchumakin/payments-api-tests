@@ -20,3 +20,5 @@ var/
 # Project related
 .venv/
 .idea/
+.pytest_cache
+pytests/.pytest_cache

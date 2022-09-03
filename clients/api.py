@@ -7,6 +7,7 @@ from model.payments import get_payments_from_list
 
 class ApiClient:
     def __init__(self, user='john', password='john'):
+        self.user = user
         self.auth = HTTPBasicAuth(user, password)
         self.headers = {'Content-type': 'application/json'}
         self.host = 'http://localhost:5000'
@@ -31,3 +32,9 @@ class ApiClient:
         parsed_resp = parse_response(r)
         parsed_resp.body = get_payments_from_list(parsed_resp.body['payments'])
         return parsed_resp
+
+    def delete_payment(self, payment_id):
+        print(f"Deleting payment {payment_id}")
+        path = f"{self.host}{self.base_path}/{payment_id}"
+        r = requests.delete(path, headers=self.headers, verify=False, auth=self.auth)
+        return parse_response(r)

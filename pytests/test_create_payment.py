@@ -8,6 +8,14 @@ from model.payments import CreatePayment
 
 api = ApiClient()
 payment = CreatePayment()
+payment_ids = []
+
+
+@pytest.fixture(autouse=True)
+def cleanup():
+    yield
+    last_payment = api.get_payments().body[-1]
+    api.delete_payment(last_payment.payment_id)
 
 
 @pytest.mark.parametrize(('purchase', 'amount', 'currency'), [

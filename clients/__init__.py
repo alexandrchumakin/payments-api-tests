@@ -2,9 +2,10 @@ import json
 
 
 class JsonResponse:
-    def __init__(self, body, status):
+    def __init__(self, body, status, raw_body):
         self.body = body
         self.status = status
+        self.raw_body = raw_body
 
 
 def parse_response(resp):
@@ -15,4 +16,4 @@ def parse_response(resp):
     body = json.loads(resp.content)
     status = resp.status_code
     print(f"Response is parsed with status {status} and body {body}")
-    return JsonResponse(body, status)
+    return JsonResponse(body, status, resp.content)

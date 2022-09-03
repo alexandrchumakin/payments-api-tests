@@ -1,0 +1,2131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 5.0.1 (Python 3.8.10 on linux)" generated="20220903 10:49:38.326" rpa="false" schemaversion="3">
+<suite id="s1" name="Payments-Api-Tests" source="/mnt/c/cygwin64/home/achumaki/work/github/payments-api-tests">
+<suite id="s1-s1" name="Robot Tests" source="/mnt/c/cygwin64/home/achumaki/work/github/payments-api-tests/robot_tests">
+<suite id="s1-s1-s1" name="Create Payment" source="/mnt/c/cygwin64/home/achumaki/work/github/payments-api-tests/robot_tests/create_payment.robot">
+<test id="s1-s1-s1-t1" name="Create Payment" line="15">
+<kw name="Create Session" library="RequestsLibrary">
+<arg>mysession</arg>
+<arg>${base_url}</arg>
+<doc>Create Session: create a HTTP session to a server</doc>
+<msg timestamp="20220903 10:49:40.135" level="INFO">Creating Session using : alias=mysession, url=http://localhost:5000, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<status status="PASS" starttime="20220903 10:49:40.134" endtime="20220903 10:49:40.135"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${headers}</var>
+<arg>Authorization=${basic_auth}</arg>
+<arg>Content-Type=application/json</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20220903 10:49:40.135" level="INFO">${headers} = {'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'}</msg>
+<status status="PASS" starttime="20220903 10:49:40.135" endtime="20220903 10:49:40.135"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${body}</var>
+<arg>purchase=${301}</arg>
+<arg>amount=${12}</arg>
+<arg>currency=EUR</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20220903 10:49:40.137" level="INFO">${body} = {'purchase': 301, 'amount': 12, 'currency': 'EUR'}</msg>
+<status status="PASS" starttime="20220903 10:49:40.136" endtime="20220903 10:49:40.137"/>
+</kw>
+<kw name="Dumps" library="json">
+<var>${body_json}</var>
+<arg>${body}</arg>
+<doc>Serialize ``obj`` to a JSON formatted ``str``.</doc>
+<msg timestamp="20220903 10:49:40.137" level="INFO">${body_json} = {"purchase": 301, "amount": 12, "currency": "EUR"}</msg>
+<status status="PASS" starttime="20220903 10:49:40.137" endtime="20220903 10:49:40.137"/>
+</kw>
+<kw name="PUT On Session" library="RequestsLibrary">
+<var>${response}</var>
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<arg>data=${body_json}</arg>
+<doc>Sends a PUT request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:40.274" level="INFO">PUT Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json', 'Content-Length': '50'} 
+ body={"purchase": 301, "amount": 12, "currency": "EUR"} 
+ </msg>
+<msg timestamp="20220903 10:49:40.274" level="INFO">PUT Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:40 GMT', 'Content-Type': 'application/json', 'Content-Length': '19', 'Connection': 'close'} 
+ body={
+  "created": 1
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:40.274" level="INFO">${response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:40.137" endtime="20220903 10:49:40.274"/>
+</kw>
+<kw name="Convert To String" library="BuiltIn">
+<var>${status_code}</var>
+<arg>${response.status_code}</arg>
+<doc>Converts the given item to a Unicode string.</doc>
+<msg timestamp="20220903 10:49:40.275" level="INFO">${status_code} = 200</msg>
+<status status="PASS" starttime="20220903 10:49:40.274" endtime="20220903 10:49:40.275"/>
+</kw>
+<kw name="Loads" library="json">
+<var>${response_json}</var>
+<arg>${response.content}</arg>
+<doc>Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+containing a JSON document) to a Python object.</doc>
+<msg timestamp="20220903 10:49:40.276" level="INFO">${response_json} = {'created': 1}</msg>
+<status status="PASS" starttime="20220903 10:49:40.276" endtime="20220903 10:49:40.276"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${created_status}</var>
+<arg>${response_json}</arg>
+<arg>created</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20220903 10:49:40.277" level="INFO">${created_status} = 1</msg>
+<status status="PASS" starttime="20220903 10:49:40.276" endtime="20220903 10:49:40.277"/>
+</kw>
+<kw name="Should Be Equal" library="BuiltIn">
+<arg>${status_code}</arg>
+<arg>200</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" starttime="20220903 10:49:40.277" endtime="20220903 10:49:40.277"/>
+</kw>
+<kw name="Should Be Equal As Integers" library="BuiltIn">
+<arg>${created_status}</arg>
+<arg>1</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<msg timestamp="20220903 10:49:40.277" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:40.277" endtime="20220903 10:49:40.277"/>
+</kw>
+<status status="PASS" starttime="20220903 10:49:40.134" endtime="20220903 10:49:40.277"/>
+</test>
+<status status="PASS" starttime="20220903 10:49:38.593" endtime="20220903 10:49:40.278"/>
+</suite>
+<suite id="s1-s1-s2" name="Delete Payment" source="/mnt/c/cygwin64/home/achumaki/work/github/payments-api-tests/robot_tests/delete_payment.robot">
+<test id="s1-s1-s2-t1" name="Delete Payment" line="15">
+<kw name="Create Session" library="RequestsLibrary">
+<arg>mysession</arg>
+<arg>${base_url}</arg>
+<doc>Create Session: create a HTTP session to a server</doc>
+<msg timestamp="20220903 10:49:40.330" level="INFO">Creating Session using : alias=mysession, url=http://localhost:5000, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<status status="PASS" starttime="20220903 10:49:40.329" endtime="20220903 10:49:40.330"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${headers}</var>
+<arg>Authorization=${basic_auth}</arg>
+<arg>Content-Type=application/json</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20220903 10:49:40.330" level="INFO">${headers} = {'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'}</msg>
+<status status="PASS" starttime="20220903 10:49:40.330" endtime="20220903 10:49:40.330"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${body}</var>
+<arg>purchase=${145}</arg>
+<arg>amount=${100}</arg>
+<arg>currency=USD</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20220903 10:49:40.331" level="INFO">${body} = {'purchase': 145, 'amount': 100, 'currency': 'USD'}</msg>
+<status status="PASS" starttime="20220903 10:49:40.330" endtime="20220903 10:49:40.331"/>
+</kw>
+<kw name="Dumps" library="json">
+<var>${body_json}</var>
+<arg>${body}</arg>
+<doc>Serialize ``obj`` to a JSON formatted ``str``.</doc>
+<msg timestamp="20220903 10:49:40.331" level="INFO">${body_json} = {"purchase": 145, "amount": 100, "currency": "USD"}</msg>
+<status status="PASS" starttime="20220903 10:49:40.331" endtime="20220903 10:49:40.331"/>
+</kw>
+<kw name="PUT On Session" library="RequestsLibrary">
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<arg>data=${body_json}</arg>
+<doc>Sends a PUT request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:40.462" level="INFO">PUT Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json', 'Content-Length': '51'} 
+ body={"purchase": 145, "amount": 100, "currency": "USD"} 
+ </msg>
+<msg timestamp="20220903 10:49:40.463" level="INFO">PUT Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:40 GMT', 'Content-Type': 'application/json', 'Content-Length': '19', 'Connection': 'close'} 
+ body={
+  "created": 1
+}
+ 
+ </msg>
+<status status="PASS" starttime="20220903 10:49:40.332" endtime="20220903 10:49:40.463"/>
+</kw>
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${get_response}</var>
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:40.558" level="INFO">GET Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'} 
+ body=None 
+ </msg>
+<msg timestamp="20220903 10:49:40.558" level="INFO">GET Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:40 GMT', 'Content-Type': 'application/json', 'Content-Length': '3029', 'Connection': 'close'} 
+ body={
+  "payments": [
+    [
+      1,
+      12345,
+      "john",
+      12.5,
+      "EUR",
+      1
+    ],
+    [
+      2,
+      112233,
+      "john",
+      125.13,
+      "TRY",
+      0
+    ],
+    [
+      3,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      4,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      5,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      6,
+      199,
+      "john",
+      12.13,
+      "asd",
+      0
+    ],
+    [
+      7,
+      199,
+      "john",
+      12.13,
+      "",
+      0
+    ],
+    [
+      8,
+      199,
+      "john",
+      12.13,
+      "1",
+      0
+    ],
+    [
+      9,
+      199,
+      "john",
+      12.13,
+      "True",
+      0
+    ],
+    [
+      10,
+      1e+41,
+      "john",
+      0.0,
+      "True",
+      0
+    ],
+    [
+      11,
+      1e+41,
+      "john",
+      0.0,
+      "{}",
+      0
+    ],
+    [
+      12,
+      321,
+      "john",
+      8.4,
+      "EUR",
+      1
+    ],
+    [
+      13,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      14,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      15,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      16,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      17,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      18,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      19,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      20,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      21,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      22,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      23,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      24,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      25,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      26,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      27,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      28,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      30,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      31,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      32,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      33,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      34,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      35,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      36,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      37,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      0
+    ],
+    [
+      38,
+      145,
+      "john",
+      100.0,
+      "USD",
+      0
+    ]
+  ]
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:40.558" level="INFO">${get_response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:40.463" endtime="20220903 10:49:40.558"/>
+</kw>
+<kw name="Loads" library="json">
+<var>${get_response_json}</var>
+<arg>${get_response.content}</arg>
+<doc>Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+containing a JSON document) to a Python object.</doc>
+<msg timestamp="20220903 10:49:40.560" level="INFO">${get_response_json} = {'payments': [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], ...</msg>
+<status status="PASS" starttime="20220903 10:49:40.559" endtime="20220903 10:49:40.560"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${all_payments}</var>
+<arg>${get_response_json}</arg>
+<arg>payments</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20220903 10:49:40.561" level="INFO">${all_payments} = [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], [6, 199, 'joh...</msg>
+<status status="PASS" starttime="20220903 10:49:40.560" endtime="20220903 10:49:40.561"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${created_payment}</var>
+<arg>${all_payments}</arg>
+<arg>-1</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:40.561" level="INFO">${created_payment} = [38, 145, 'john', 100.0, 'USD', 0]</msg>
+<status status="PASS" starttime="20220903 10:49:40.561" endtime="20220903 10:49:40.561"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${created_payment_id}</var>
+<arg>${created_payment}</arg>
+<arg>0</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:40.562" level="INFO">${created_payment_id} = 38</msg>
+<status status="PASS" starttime="20220903 10:49:40.561" endtime="20220903 10:49:40.562"/>
+</kw>
+<kw name="Log To Console" library="BuiltIn">
+<arg>paymentId: ${created_payment_id}</arg>
+<doc>Logs the given message to the console.</doc>
+<status status="PASS" starttime="20220903 10:49:40.562" endtime="20220903 10:49:40.562"/>
+</kw>
+<kw name="DELETE On Session" library="RequestsLibrary">
+<var>${delete_response}</var>
+<arg>mysession</arg>
+<arg>${base_path}/${created_payment_id}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a DELETE request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:40.677" level="INFO">DELETE Request : url=http://localhost:5000/finance/api/v1.0/payments/38 
+ path_url=/finance/api/v1.0/payments/38 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json', 'Content-Length': '0'} 
+ body=None 
+ </msg>
+<msg timestamp="20220903 10:49:40.677" level="INFO">DELETE Response : url=http://localhost:5000/finance/api/v1.0/payments/38 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:40 GMT', 'Content-Type': 'application/json', 'Content-Length': '19', 'Connection': 'close'} 
+ body={
+  "deleted": 1
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:40.678" level="INFO">${delete_response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:40.562" endtime="20220903 10:49:40.678"/>
+</kw>
+<kw name="Convert To String" library="BuiltIn">
+<var>${delete_status_code}</var>
+<arg>${delete_response.status_code}</arg>
+<doc>Converts the given item to a Unicode string.</doc>
+<msg timestamp="20220903 10:49:40.679" level="INFO">${delete_status_code} = 200</msg>
+<status status="PASS" starttime="20220903 10:49:40.678" endtime="20220903 10:49:40.679"/>
+</kw>
+<kw name="Loads" library="json">
+<var>${delete_response_json}</var>
+<arg>${delete_response.content}</arg>
+<doc>Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+containing a JSON document) to a Python object.</doc>
+<msg timestamp="20220903 10:49:40.680" level="INFO">${delete_response_json} = {'deleted': 1}</msg>
+<status status="PASS" starttime="20220903 10:49:40.679" endtime="20220903 10:49:40.680"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${number_of_deleted_payments}</var>
+<arg>${delete_response_json}</arg>
+<arg>deleted</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20220903 10:49:40.680" level="INFO">${number_of_deleted_payments} = 1</msg>
+<status status="PASS" starttime="20220903 10:49:40.680" endtime="20220903 10:49:40.680"/>
+</kw>
+<kw name="Should Be Equal" library="BuiltIn">
+<arg>${delete_status_code}</arg>
+<arg>200</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" starttime="20220903 10:49:40.680" endtime="20220903 10:49:40.681"/>
+</kw>
+<kw name="Should Be Equal As Integers" library="BuiltIn">
+<arg>${number_of_deleted_payments}</arg>
+<arg>1</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<msg timestamp="20220903 10:49:40.681" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:40.681" endtime="20220903 10:49:40.681"/>
+</kw>
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${new_get_response}</var>
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:40.765" level="INFO">GET Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'} 
+ body=None 
+ </msg>
+<msg timestamp="20220903 10:49:40.766" level="INFO">GET Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:40 GMT', 'Content-Type': 'application/json', 'Content-Length': '2947', 'Connection': 'close'} 
+ body={
+  "payments": [
+    [
+      1,
+      12345,
+      "john",
+      12.5,
+      "EUR",
+      1
+    ],
+    [
+      2,
+      112233,
+      "john",
+      125.13,
+      "TRY",
+      0
+    ],
+    [
+      3,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      4,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      5,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      6,
+      199,
+      "john",
+      12.13,
+      "asd",
+      0
+    ],
+    [
+      7,
+      199,
+      "john",
+      12.13,
+      "",
+      0
+    ],
+    [
+      8,
+      199,
+      "john",
+      12.13,
+      "1",
+      0
+    ],
+    [
+      9,
+      199,
+      "john",
+      12.13,
+      "True",
+      0
+    ],
+    [
+      10,
+      1e+41,
+      "john",
+      0.0,
+      "True",
+      0
+    ],
+    [
+      11,
+      1e+41,
+      "john",
+      0.0,
+      "{}",
+      0
+    ],
+    [
+      12,
+      321,
+      "john",
+      8.4,
+      "EUR",
+      1
+    ],
+    [
+      13,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      14,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      15,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      16,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      17,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      18,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      19,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      20,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      21,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      22,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      23,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      24,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      25,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      26,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      27,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      28,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      30,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      31,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      32,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      33,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      34,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      35,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      36,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      37,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      0
+    ]
+  ]
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:40.766" level="INFO">${new_get_response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:40.681" endtime="20220903 10:49:40.766"/>
+</kw>
+<kw name="Loads" library="json">
+<var>${new_get_response_json}</var>
+<arg>${new_get_response.content}</arg>
+<doc>Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+containing a JSON document) to a Python object.</doc>
+<msg timestamp="20220903 10:49:40.767" level="INFO">${new_get_response_json} = {'payments': [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], ...</msg>
+<status status="PASS" starttime="20220903 10:49:40.766" endtime="20220903 10:49:40.767"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${new_payments}</var>
+<arg>${new_get_response_json}</arg>
+<arg>payments</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20220903 10:49:40.768" level="INFO">${new_payments} = [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], [6, 199, 'joh...</msg>
+<status status="PASS" starttime="20220903 10:49:40.767" endtime="20220903 10:49:40.768"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${last_payment}</var>
+<arg>${new_payments}</arg>
+<arg>-1</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:40.768" level="INFO">${last_payment} = [37, 301, 'john', 12.0, 'EUR', 0]</msg>
+<status status="PASS" starttime="20220903 10:49:40.768" endtime="20220903 10:49:40.768"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${last_payment_id}</var>
+<arg>${last_payment}</arg>
+<arg>0</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:40.769" level="INFO">${last_payment_id} = 37</msg>
+<status status="PASS" starttime="20220903 10:49:40.768" endtime="20220903 10:49:40.769"/>
+</kw>
+<kw name="Should Not Be Equal As Integers" library="BuiltIn">
+<arg>${last_payment_id}</arg>
+<arg>${created_payment_id}</arg>
+<doc>Fails if objects are equal after converting them to integers.</doc>
+<status status="PASS" starttime="20220903 10:49:40.769" endtime="20220903 10:49:40.770"/>
+</kw>
+<status status="PASS" starttime="20220903 10:49:40.329" endtime="20220903 10:49:40.770"/>
+</test>
+<status status="PASS" starttime="20220903 10:49:40.279" endtime="20220903 10:49:40.770"/>
+</suite>
+<suite id="s1-s1-s3" name="Get Payments" source="/mnt/c/cygwin64/home/achumaki/work/github/payments-api-tests/robot_tests/get_payments.robot">
+<test id="s1-s1-s3-t1" name="Get Payments" line="14">
+<kw name="Create Session" library="RequestsLibrary">
+<arg>mysession</arg>
+<arg>${base_url}</arg>
+<doc>Create Session: create a HTTP session to a server</doc>
+<msg timestamp="20220903 10:49:40.817" level="INFO">Creating Session using : alias=mysession, url=http://localhost:5000, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<status status="PASS" starttime="20220903 10:49:40.817" endtime="20220903 10:49:40.817"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${headers}</var>
+<arg>Authorization=${basic_auth}</arg>
+<arg>Content-Type=application/json</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20220903 10:49:40.818" level="INFO">${headers} = {'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'}</msg>
+<status status="PASS" starttime="20220903 10:49:40.818" endtime="20220903 10:49:40.818"/>
+</kw>
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${response}</var>
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:40.924" level="INFO">GET Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'} 
+ body=None 
+ </msg>
+<msg timestamp="20220903 10:49:40.924" level="INFO">GET Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:40 GMT', 'Content-Type': 'application/json', 'Content-Length': '2947', 'Connection': 'close'} 
+ body={
+  "payments": [
+    [
+      1,
+      12345,
+      "john",
+      12.5,
+      "EUR",
+      1
+    ],
+    [
+      2,
+      112233,
+      "john",
+      125.13,
+      "TRY",
+      0
+    ],
+    [
+      3,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      4,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      5,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      6,
+      199,
+      "john",
+      12.13,
+      "asd",
+      0
+    ],
+    [
+      7,
+      199,
+      "john",
+      12.13,
+      "",
+      0
+    ],
+    [
+      8,
+      199,
+      "john",
+      12.13,
+      "1",
+      0
+    ],
+    [
+      9,
+      199,
+      "john",
+      12.13,
+      "True",
+      0
+    ],
+    [
+      10,
+      1e+41,
+      "john",
+      0.0,
+      "True",
+      0
+    ],
+    [
+      11,
+      1e+41,
+      "john",
+      0.0,
+      "{}",
+      0
+    ],
+    [
+      12,
+      321,
+      "john",
+      8.4,
+      "EUR",
+      1
+    ],
+    [
+      13,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      14,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      15,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      16,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      17,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      18,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      19,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      20,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      21,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      22,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      23,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      24,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      25,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      26,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      27,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      28,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      30,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      31,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      32,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      33,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      34,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      35,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      36,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      37,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      0
+    ]
+  ]
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:40.925" level="INFO">${response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:40.818" endtime="20220903 10:49:40.925"/>
+</kw>
+<kw name="Convert To String" library="BuiltIn">
+<var>${status_code}</var>
+<arg>${response.status_code}</arg>
+<doc>Converts the given item to a Unicode string.</doc>
+<msg timestamp="20220903 10:49:40.925" level="INFO">${status_code} = 200</msg>
+<status status="PASS" starttime="20220903 10:49:40.925" endtime="20220903 10:49:40.925"/>
+</kw>
+<kw name="Should Be Equal" library="BuiltIn">
+<arg>${status_code}</arg>
+<arg>200</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" starttime="20220903 10:49:40.926" endtime="20220903 10:49:40.926"/>
+</kw>
+<kw name="Should Be True" library="BuiltIn">
+<arg>${response.content}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" starttime="20220903 10:49:40.926" endtime="20220903 10:49:40.926"/>
+</kw>
+<status status="PASS" starttime="20220903 10:49:40.816" endtime="20220903 10:49:40.926"/>
+</test>
+<status status="PASS" starttime="20220903 10:49:40.771" endtime="20220903 10:49:40.927"/>
+</suite>
+<suite id="s1-s1-s4" name="Process Payments" source="/mnt/c/cygwin64/home/achumaki/work/github/payments-api-tests/robot_tests/process_payments.robot">
+<test id="s1-s1-s4-t1" name="Process Payments" line="15">
+<kw name="Create Session" library="RequestsLibrary">
+<arg>mysession</arg>
+<arg>${base_url}</arg>
+<doc>Create Session: create a HTTP session to a server</doc>
+<msg timestamp="20220903 10:49:41.004" level="INFO">Creating Session using : alias=mysession, url=http://localhost:5000, headers={},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<status status="PASS" starttime="20220903 10:49:41.003" endtime="20220903 10:49:41.004"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${headers}</var>
+<arg>Authorization=${basic_auth}</arg>
+<arg>Content-Type=application/json</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20220903 10:49:41.004" level="INFO">${headers} = {'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'}</msg>
+<status status="PASS" starttime="20220903 10:49:41.004" endtime="20220903 10:49:41.004"/>
+</kw>
+<kw name="Create Dictionary" library="BuiltIn">
+<var>${body}</var>
+<arg>purchase=${145}</arg>
+<arg>amount=${100}</arg>
+<arg>currency=USD</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<msg timestamp="20220903 10:49:41.005" level="INFO">${body} = {'purchase': 145, 'amount': 100, 'currency': 'USD'}</msg>
+<status status="PASS" starttime="20220903 10:49:41.004" endtime="20220903 10:49:41.005"/>
+</kw>
+<kw name="Dumps" library="json">
+<var>${body_json}</var>
+<arg>${body}</arg>
+<doc>Serialize ``obj`` to a JSON formatted ``str``.</doc>
+<msg timestamp="20220903 10:49:41.006" level="INFO">${body_json} = {"purchase": 145, "amount": 100, "currency": "USD"}</msg>
+<status status="PASS" starttime="20220903 10:49:41.005" endtime="20220903 10:49:41.006"/>
+</kw>
+<kw name="PUT On Session" library="RequestsLibrary">
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<arg>data=${body_json}</arg>
+<doc>Sends a PUT request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:41.111" level="INFO">PUT Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json', 'Content-Length': '51'} 
+ body={"purchase": 145, "amount": 100, "currency": "USD"} 
+ </msg>
+<msg timestamp="20220903 10:49:41.111" level="INFO">PUT Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:41 GMT', 'Content-Type': 'application/json', 'Content-Length': '19', 'Connection': 'close'} 
+ body={
+  "created": 1
+}
+ 
+ </msg>
+<status status="PASS" starttime="20220903 10:49:41.006" endtime="20220903 10:49:41.111"/>
+</kw>
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${get_response}</var>
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:41.199" level="INFO">GET Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'} 
+ body=None 
+ </msg>
+<msg timestamp="20220903 10:49:41.199" level="INFO">GET Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:41 GMT', 'Content-Type': 'application/json', 'Content-Length': '3029', 'Connection': 'close'} 
+ body={
+  "payments": [
+    [
+      1,
+      12345,
+      "john",
+      12.5,
+      "EUR",
+      1
+    ],
+    [
+      2,
+      112233,
+      "john",
+      125.13,
+      "TRY",
+      0
+    ],
+    [
+      3,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      4,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      5,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      6,
+      199,
+      "john",
+      12.13,
+      "asd",
+      0
+    ],
+    [
+      7,
+      199,
+      "john",
+      12.13,
+      "",
+      0
+    ],
+    [
+      8,
+      199,
+      "john",
+      12.13,
+      "1",
+      0
+    ],
+    [
+      9,
+      199,
+      "john",
+      12.13,
+      "True",
+      0
+    ],
+    [
+      10,
+      1e+41,
+      "john",
+      0.0,
+      "True",
+      0
+    ],
+    [
+      11,
+      1e+41,
+      "john",
+      0.0,
+      "{}",
+      0
+    ],
+    [
+      12,
+      321,
+      "john",
+      8.4,
+      "EUR",
+      1
+    ],
+    [
+      13,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      14,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      15,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      16,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      17,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      18,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      19,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      20,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      21,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      22,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      23,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      24,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      25,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      26,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      27,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      28,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      30,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      31,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      32,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      33,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      34,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      35,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      36,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      37,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      0
+    ],
+    [
+      38,
+      145,
+      "john",
+      100.0,
+      "USD",
+      0
+    ]
+  ]
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:41.199" level="INFO">${get_response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:41.111" endtime="20220903 10:49:41.199"/>
+</kw>
+<kw name="Loads" library="json">
+<var>${get_response_json}</var>
+<arg>${get_response.content}</arg>
+<doc>Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+containing a JSON document) to a Python object.</doc>
+<msg timestamp="20220903 10:49:41.200" level="INFO">${get_response_json} = {'payments': [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], ...</msg>
+<status status="PASS" starttime="20220903 10:49:41.199" endtime="20220903 10:49:41.200"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${all_payments}</var>
+<arg>${get_response_json}</arg>
+<arg>payments</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20220903 10:49:41.201" level="INFO">${all_payments} = [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], [6, 199, 'joh...</msg>
+<status status="PASS" starttime="20220903 10:49:41.200" endtime="20220903 10:49:41.201"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${created_payment}</var>
+<arg>${all_payments}</arg>
+<arg>-1</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:41.201" level="INFO">${created_payment} = [38, 145, 'john', 100.0, 'USD', 0]</msg>
+<status status="PASS" starttime="20220903 10:49:41.201" endtime="20220903 10:49:41.201"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${created_payment_proc_status}</var>
+<arg>${created_payment}</arg>
+<arg>-1</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:41.201" level="INFO">${created_payment_proc_status} = 0</msg>
+<status status="PASS" starttime="20220903 10:49:41.201" endtime="20220903 10:49:41.201"/>
+</kw>
+<kw name="Should Be Equal As Integers" library="BuiltIn">
+<arg>${created_payment_proc_status}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<msg timestamp="20220903 10:49:41.202" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:41.201" endtime="20220903 10:49:41.202"/>
+</kw>
+<kw name="POST On Session" library="RequestsLibrary">
+<var>${process_response}</var>
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a POST request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:41.405" level="INFO">POST Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json', 'Content-Length': '0'} 
+ body=None 
+ </msg>
+<msg timestamp="20220903 10:49:41.405" level="INFO">POST Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:41 GMT', 'Content-Type': 'application/json', 'Content-Length': '21', 'Connection': 'close'} 
+ body={
+  "processed": 2
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:41.405" level="INFO">${process_response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:41.202" endtime="20220903 10:49:41.405"/>
+</kw>
+<kw name="Convert To String" library="BuiltIn">
+<var>${process_status_code}</var>
+<arg>${process_response.status_code}</arg>
+<doc>Converts the given item to a Unicode string.</doc>
+<msg timestamp="20220903 10:49:41.406" level="INFO">${process_status_code} = 200</msg>
+<status status="PASS" starttime="20220903 10:49:41.405" endtime="20220903 10:49:41.406"/>
+</kw>
+<kw name="Loads" library="json">
+<var>${process_response_json}</var>
+<arg>${process_response.content}</arg>
+<doc>Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+containing a JSON document) to a Python object.</doc>
+<msg timestamp="20220903 10:49:41.407" level="INFO">${process_response_json} = {'processed': 2}</msg>
+<status status="PASS" starttime="20220903 10:49:41.406" endtime="20220903 10:49:41.407"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${number_of_processed_payments}</var>
+<arg>${process_response_json}</arg>
+<arg>processed</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20220903 10:49:41.407" level="INFO">${number_of_processed_payments} = 2</msg>
+<status status="PASS" starttime="20220903 10:49:41.407" endtime="20220903 10:49:41.407"/>
+</kw>
+<kw name="Should Be Equal" library="BuiltIn">
+<arg>${process_status_code}</arg>
+<arg>200</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" starttime="20220903 10:49:41.407" endtime="20220903 10:49:41.407"/>
+</kw>
+<kw name="Should Be True" library="BuiltIn">
+<arg>${number_of_processed_payments}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" starttime="20220903 10:49:41.407" endtime="20220903 10:49:41.408"/>
+</kw>
+<kw name="GET On Session" library="RequestsLibrary">
+<var>${new_get_response}</var>
+<arg>mysession</arg>
+<arg>${base_path}</arg>
+<arg>headers=${headers}</arg>
+<doc>Sends a GET request on a previously created HTTP Session.</doc>
+<msg timestamp="20220903 10:49:41.493" level="INFO">GET Request : url=http://localhost:5000/finance/api/v1.0/payments 
+ path_url=/finance/api/v1.0/payments 
+ headers={'User-Agent': 'python-requests/2.27.1', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Basic am9objpqb2hu', 'Content-Type': 'application/json'} 
+ body=None 
+ </msg>
+<msg timestamp="20220903 10:49:41.494" level="INFO">GET Response : url=http://localhost:5000/finance/api/v1.0/payments 
+ status=200, reason=OK 
+ headers={'Server': 'Werkzeug/2.2.2 Python/3.8.10', 'Date': 'Sat, 03 Sep 2022 08:49:41 GMT', 'Content-Type': 'application/json', 'Content-Length': '3028', 'Connection': 'close'} 
+ body={
+  "payments": [
+    [
+      1,
+      12345,
+      "john",
+      12.5,
+      "EUR",
+      1
+    ],
+    [
+      2,
+      112233,
+      "john",
+      125.13,
+      "TRY",
+      0
+    ],
+    [
+      3,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      4,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      5,
+      199,
+      "john",
+      10.1892,
+      "EUR",
+      1
+    ],
+    [
+      6,
+      199,
+      "john",
+      12.13,
+      "asd",
+      0
+    ],
+    [
+      7,
+      199,
+      "john",
+      12.13,
+      "",
+      0
+    ],
+    [
+      8,
+      199,
+      "john",
+      12.13,
+      "1",
+      0
+    ],
+    [
+      9,
+      199,
+      "john",
+      12.13,
+      "True",
+      0
+    ],
+    [
+      10,
+      1e+41,
+      "john",
+      0.0,
+      "True",
+      0
+    ],
+    [
+      11,
+      1e+41,
+      "john",
+      0.0,
+      "{}",
+      0
+    ],
+    [
+      12,
+      321,
+      "john",
+      8.4,
+      "EUR",
+      1
+    ],
+    [
+      13,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      14,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      15,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      16,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      17,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      18,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      19,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      20,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      21,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      22,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      23,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      24,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      25,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      26,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      27,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      28,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      30,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      31,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      32,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      33,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      34,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      35,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      36,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ],
+    [
+      37,
+      301,
+      "john",
+      12.0,
+      "EUR",
+      1
+    ],
+    [
+      38,
+      145,
+      "john",
+      84.0,
+      "EUR",
+      1
+    ]
+  ]
+}
+ 
+ </msg>
+<msg timestamp="20220903 10:49:41.494" level="INFO">${new_get_response} = &lt;Response [200]&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:41.408" endtime="20220903 10:49:41.494"/>
+</kw>
+<kw name="Loads" library="json">
+<var>${new_get_response_json}</var>
+<arg>${new_get_response.content}</arg>
+<doc>Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
+containing a JSON document) to a Python object.</doc>
+<msg timestamp="20220903 10:49:41.495" level="INFO">${new_get_response_json} = {'payments': [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], ...</msg>
+<status status="PASS" starttime="20220903 10:49:41.494" endtime="20220903 10:49:41.495"/>
+</kw>
+<kw name="Get From Dictionary" library="Collections">
+<var>${processed_payments}</var>
+<arg>${new_get_response_json}</arg>
+<arg>payments</arg>
+<doc>Returns a value from the given ``dictionary`` based on the given ``key``.</doc>
+<msg timestamp="20220903 10:49:41.496" level="INFO">${processed_payments} = [[1, 12345, 'john', 12.5, 'EUR', 1], [2, 112233, 'john', 125.13, 'TRY', 0], [3, 199, 'john', 10.1892, 'EUR', 1], [4, 199, 'john', 10.1892, 'EUR', 1], [5, 199, 'john', 10.1892, 'EUR', 1], [6, 199, 'joh...</msg>
+<status status="PASS" starttime="20220903 10:49:41.495" endtime="20220903 10:49:41.496"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${processed_payment}</var>
+<arg>${processed_payments}</arg>
+<arg>-1</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:41.496" level="INFO">${processed_payment} = [38, 145, 'john', 84.0, 'EUR', 1]</msg>
+<status status="PASS" starttime="20220903 10:49:41.496" endtime="20220903 10:49:41.496"/>
+</kw>
+<kw name="Get From List" library="Collections">
+<var>${processed_payment_proc_status}</var>
+<arg>${processed_payment}</arg>
+<arg>-1</arg>
+<doc>Returns the value specified with an ``index`` from ``list``.</doc>
+<msg timestamp="20220903 10:49:41.497" level="INFO">${processed_payment_proc_status} = 1</msg>
+<status status="PASS" starttime="20220903 10:49:41.496" endtime="20220903 10:49:41.497"/>
+</kw>
+<kw name="Should Be Equal As Integers" library="BuiltIn">
+<arg>${processed_payment_proc_status}</arg>
+<arg>1</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<msg timestamp="20220903 10:49:41.497" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<status status="PASS" starttime="20220903 10:49:41.497" endtime="20220903 10:49:41.497"/>
+</kw>
+<status status="PASS" starttime="20220903 10:49:41.003" endtime="20220903 10:49:41.497"/>
+</test>
+<status status="PASS" starttime="20220903 10:49:40.927" endtime="20220903 10:49:41.497"/>
+</suite>
+<status status="PASS" starttime="20220903 10:49:38.573" endtime="20220903 10:49:41.498"/>
+</suite>
+<status status="PASS" starttime="20220903 10:49:38.329" endtime="20220903 10:49:41.499"/>
+</suite>
+<statistics>
+<total>
+<stat pass="4" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat pass="4" fail="0" skip="0" id="s1" name="Payments-Api-Tests">Payments-Api-Tests</stat>
+<stat pass="4" fail="0" skip="0" id="s1-s1" name="Robot Tests">Payments-Api-Tests.Robot Tests</stat>
+<stat pass="1" fail="0" skip="0" id="s1-s1-s1" name="Create Payment">Payments-Api-Tests.Robot Tests.Create Payment</stat>
+<stat pass="1" fail="0" skip="0" id="s1-s1-s2" name="Delete Payment">Payments-Api-Tests.Robot Tests.Delete Payment</stat>
+<stat pass="1" fail="0" skip="0" id="s1-s1-s3" name="Get Payments">Payments-Api-Tests.Robot Tests.Get Payments</stat>
+<stat pass="1" fail="0" skip="0" id="s1-s1-s4" name="Process Payments">Payments-Api-Tests.Robot Tests.Process Payments</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>

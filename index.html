@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Test Report</title>
+    <style>body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.log {
+  background-color: #e6e6e6;
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  height: 230px;
+  overflow-y: scroll;
+  padding: 5px;
+  white-space: pre-wrap;
+}
+.log:only-child {
+  height: inherit;
+}
+
+div.image {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.image img {
+  width: 320px;
+}
+
+div.video {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.video video {
+  overflow: hidden;
+  width: 320px;
+  height: 240px;
+}
+
+.collapsed {
+  display: none;
+}
+
+.expander::after {
+  content: " (show details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.collapser::after {
+  content: " (hide details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+
+.sort-icon {
+  font-size: 0px;
+  float: left;
+  margin-right: 5px;
+  margin-top: 5px;
+  /*triangle*/
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+}
+.inactive .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #E6E6E6;
+}
+.asc.active .sort-icon {
+  /*finish triangle*/
+  border-bottom: 8px solid #999;
+}
+.desc.active .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #999;
+}
+</style></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++)
+        filterItems[i].hidden = false;
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>report.html</h1>
+    <p>Report generated on 04-Sep-2022 at 18:05:15 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.1.1</p>
+    <h2>Environment</h2>
+    <table id="environment">
+      <tr>
+        <td>CI</td>
+        <td>true</td></tr>
+      <tr>
+        <td>JAVA_HOME</td>
+        <td>/usr/lib/jvm/temurin-11-jdk-amd64</td></tr>
+      <tr>
+        <td>Packages</td>
+        <td>{"pluggy": "1.0.0", "py": "1.11.0", "pytest": "7.1.3"}</td></tr>
+      <tr>
+        <td>Platform</td>
+        <td>Linux-5.15.0-1017-azure-x86_64-with-glibc2.2.5</td></tr>
+      <tr>
+        <td>Plugins</td>
+        <td>{"html": "3.1.1", "metadata": "2.0.2"}</td></tr>
+      <tr>
+        <td>Python</td>
+        <td>3.8.13</td></tr></table>
+    <h2>Summary</h2>
+    <p>31 tests ran in 9.33 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">31 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_valid_payment[123-10.1-EUR]</td>
+          <td class="col-duration">0.39</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 123, &quot;amount&quot;: 10.1, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.1, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;a9ce3dc0-160f-400f-a577-d31552979d64&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 123}
+Deleting payment a9ce3dc0-160f-400f-a577-d31552979d64
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_valid_payment[124-11.12-USD]</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 124, &quot;amount&quot;: 11.12, &quot;currency&quot;: &quot;USD&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 11.12, &#x27;currency&#x27;: &#x27;USD&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d9a1fa21-39bb-45b5-9991-76c6369a60a6&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 124}
+Deleting payment d9a1fa21-39bb-45b5-9991-76c6369a60a6
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_valid_payment[125-122.0-TRY]</td>
+          <td class="col-duration">0.32</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 125, &quot;amount&quot;: 122.0, &quot;currency&quot;: &quot;TRY&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 122.0, &#x27;currency&#x27;: &#x27;TRY&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;98a61931-29e6-49d7-8cf3-50543f2fe174&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 125}
+Deleting payment 98a61931-29e6-49d7-8cf3-50543f2fe174
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_duplicate_payment</td>
+          <td class="col-duration">0.41</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 992, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;6b3a41e4-6134-4628-b219-61a8a3c330c3&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 992}
+Creating payment with body {&quot;purchase&quot;: 992, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 400 and body None
+Deleting payment 6b3a41e4-6134-4628-b219-61a8a3c330c3
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_payment[empty currency-126-12.2-]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 126, &quot;amount&quot;: 12.2, &quot;currency&quot;: &quot;&quot;}
+Response is parsed with status 400 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_payment[non-existent currency-128-0-ABC]</td>
+          <td class="col-duration">0.20</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 128, &quot;amount&quot;: 0, &quot;currency&quot;: &quot;ABC&quot;}
+Response is parsed with status 400 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_payment[currency with invalid length-128-0-US]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 128, &quot;amount&quot;: 0, &quot;currency&quot;: &quot;US&quot;}
+Response is parsed with status 400 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_payment[currency in lower case-128-0-usd]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 128, &quot;amount&quot;: 0, &quot;currency&quot;: &quot;usd&quot;}
+Response is parsed with status 400 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_payment[currency ends with invalid symbol-128-0-USDa]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 128, &quot;amount&quot;: 0, &quot;currency&quot;: &quot;USDa&quot;}
+Response is parsed with status 400 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_payment[currency in unsupported encoding-128-0-РУБ]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 128, &quot;amount&quot;: 0, &quot;currency&quot;: &quot;\u0420\u0423\u0411&quot;}
+Response is parsed with status 400 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_payment[negative amount-130--22.12-EUR]</td>
+          <td class="col-duration">0.10</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 130, &quot;amount&quot;: -22.12, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 400 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[empty amount-129--EUR]</td>
+          <td class="col-duration">0.21</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 129, &quot;amount&quot;: &quot;&quot;, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[purchase is decimal-12.12-33-EUR]</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 12.12, &quot;amount&quot;: 33, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[purchase is empty string--33-EUR]</td>
+          <td class="col-duration">0.10</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: &quot;&quot;, &quot;amount&quot;: 33, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[zero amount-131-0-EUR]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 131, &quot;amount&quot;: 0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[negative zero amount-132-0-EUR]</td>
+          <td class="col-duration">0.09</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 132, &quot;amount&quot;: 0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[negative purchase--1-33-EUR]</td>
+          <td class="col-duration">0.10</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: -1, &quot;amount&quot;: 33, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[invalid purchase type-purchase6-33.22-EUR]</td>
+          <td class="col-duration">0.11</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: [], &quot;amount&quot;: 33.22, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[invalid amount type-130-amount7-EUR]</td>
+          <td class="col-duration">0.15</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 130, &quot;amount&quot;: [&quot;test&quot;], &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_create_payment.py::test_create_invalid_types_payment[invalid currency type-130-54.4-False]</td>
+          <td class="col-duration">0.13</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 130, &quot;amount&quot;: 54.4, &quot;currency&quot;: false}
+Response is parsed with status 500 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_delete_payment.py::test_delete_single_payment</td>
+          <td class="col-duration">0.29</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 921, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;49f6e4ef-d9b6-4774-a9a7-c77df53be7be&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 921}
+Deleting payment 49f6e4ef-d9b6-4774-a9a7-c77df53be7be
+Response is parsed with status 204 and body b&#x27;&#x27;
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_delete_payment.py::test_delete_non_existing_payment</td>
+          <td class="col-duration">0.14</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Deleting payment 458435897345
+Response is parsed with status 404 and body None
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_delete_payment.py::test_delete_multiple_payments</td>
+          <td class="col-duration">0.62</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 546, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;c17d3d93-ce8c-46c6-a39f-04ec0b4a48ff&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 546}
+Creating payment with body {&quot;purchase&quot;: 853, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;f12504a4-5657-4ffc-81c7-e5d15063b176&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 853}
+Deleting payment c17d3d93-ce8c-46c6-a39f-04ec0b4a48ff
+Response is parsed with status 204 and body b&#x27;&#x27;
+Deleting payment f12504a4-5657-4ffc-81c7-e5d15063b176
+Response is parsed with status 204 and body b&#x27;&#x27;
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_get_payments.py::test_get_created_payment</td>
+          <td class="col-duration">0.19</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 369, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 369}
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 369}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_get_payments.py::test_get_processed_payment</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 292, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;78b0104a-919b-4cbc-9da5-9c144bd49341&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 292}
+Processing payments
+Response is parsed with status 403 and body None
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;78b0104a-919b-4cbc-9da5-9c144bd49341&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 292}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 369}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_get_payments.py::test_always_same_payments_order</td>
+          <td class="col-duration">0.32</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 720, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d347031a-f0f8-4ae2-8d81-4cdf06f92069&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 720}
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d347031a-f0f8-4ae2-8d81-4cdf06f92069&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 720}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;78b0104a-919b-4cbc-9da5-9c144bd49341&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 292}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 369}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d347031a-f0f8-4ae2-8d81-4cdf06f92069&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 720}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;78b0104a-919b-4cbc-9da5-9c144bd49341&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 292}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 369}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_process_payment.py::test_process_valid_payment</td>
+          <td class="col-duration">0.40</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 880, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;1b7120c4-10bc-4992-90ba-f5d07777691d&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 880}
+Processing payments
+Response is parsed with status 200 and body {&#x27;processed&#x27;: 5}
+<br/> ----------------------------Captured stdout teardown---------------------------- <br/>Deleting payment 1b7120c4-10bc-4992-90ba-f5d07777691d
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_process_payment.py::test_process_all_payments</td>
+          <td class="col-duration">0.72</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 820, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;56d358a9-bc3d-4550-a4ed-14a87677bdbb&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 820}
+Creating payment with body {&quot;purchase&quot;: 349, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;d89e23c9-c0b8-441c-8004-7b6b3363790a&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 349}
+Processing payments
+Response is parsed with status 200 and body {&#x27;processed&#x27;: 2}
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;56d358a9-bc3d-4550-a4ed-14a87677bdbb&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 820}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;d89e23c9-c0b8-441c-8004-7b6b3363790a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 349}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 369}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;78b0104a-919b-4cbc-9da5-9c144bd49341&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 292}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d347031a-f0f8-4ae2-8d81-4cdf06f92069&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 720}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/> ----------------------------Captured stdout teardown---------------------------- <br/>Deleting payment 1b7120c4-10bc-4992-90ba-f5d07777691d
+Response is parsed with status 404 and body None
+Deleting payment 56d358a9-bc3d-4550-a4ed-14a87677bdbb
+Response is parsed with status 204 and body b&#x27;&#x27;
+Deleting payment d89e23c9-c0b8-441c-8004-7b6b3363790a
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_process_payment.py::test_money_conversion[same currency-EUR-10.1-10.1]</td>
+          <td class="col-duration">0.73</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 123, &quot;amount&quot;: 10.1, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.1, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;349c5331-9c91-43ba-90ee-3046c12f7f81&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 123}
+Processing payments
+Response is parsed with status 200 and body {&#x27;processed&#x27;: 1}
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 10.1, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;349c5331-9c91-43ba-90ee-3046c12f7f81&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 123}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 369}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;78b0104a-919b-4cbc-9da5-9c144bd49341&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 292}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d347031a-f0f8-4ae2-8d81-4cdf06f92069&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 720}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/> ----------------------------Captured stdout teardown---------------------------- <br/>Deleting payment 1b7120c4-10bc-4992-90ba-f5d07777691d
+Response is parsed with status 404 and body None
+Deleting payment 56d358a9-bc3d-4550-a4ed-14a87677bdbb
+Response is parsed with status 404 and body None
+Deleting payment d89e23c9-c0b8-441c-8004-7b6b3363790a
+Response is parsed with status 404 and body None
+Deleting payment 349c5331-9c91-43ba-90ee-3046c12f7f81
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_process_payment.py::test_money_conversion[existing conversion rate-PHP-100.22-5697.90788]</td>
+          <td class="col-duration">0.93</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 123, &quot;amount&quot;: 100.22, &quot;currency&quot;: &quot;PHP&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 100.22, &#x27;currency&#x27;: &#x27;PHP&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;99d5ad4c-dbae-4284-9ab1-9ba1d41756f5&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 123}
+Processing payments
+Response is parsed with status 200 and body {&#x27;processed&#x27;: 1}
+Retrieving all payments
+Response is parsed with status 200 and body [{&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;admin&#x27;, &#x27;paymentId&#x27;: &#x27;99d5ad4c-dbae-4284-9ab1-9ba1d41756f5&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 123}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;486ac15f-c8b6-4f0e-b071-1a2275b29f97&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 205}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;ec0a2bd6-4e13-4927-8873-475556bbf155&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 369}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;78b0104a-919b-4cbc-9da5-9c144bd49341&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 292}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d347031a-f0f8-4ae2-8d81-4cdf06f92069&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 720}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;8feae94b-2a06-45be-92d8-96f9eecc1d8a&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 936}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;39170a91-a716-41db-87fd-e500893a7eda&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 209}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b5f8c683-c16f-4cd5-bf24-170310f16112&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 195}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;d16ffc18-3cf9-4338-984b-0b6600efad28&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 932}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;653f930b-588c-44bf-8a41-9c5abbe2c848&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 700}, {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;cdc82795-7054-4346-a5c5-e716db7ba6af&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 347}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;232d1ab8-e372-4969-b376-3befd8eb2b3f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 231}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;503a71a7-d840-45d7-a905-718bd4dfea55&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 600}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;3aa8ad49-8981-4a03-ac36-ea803990648f&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 629}, {&#x27;amount&#x27;: 5697.90788, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;b51e0d68-20e6-4155-b4a7-45cd93acb854&#x27;, &#x27;processed&#x27;: True, &#x27;purchase&#x27;: 497}]
+<br/> ----------------------------Captured stdout teardown---------------------------- <br/>Deleting payment 1b7120c4-10bc-4992-90ba-f5d07777691d
+Response is parsed with status 404 and body None
+Deleting payment 56d358a9-bc3d-4550-a4ed-14a87677bdbb
+Response is parsed with status 404 and body None
+Deleting payment d89e23c9-c0b8-441c-8004-7b6b3363790a
+Response is parsed with status 404 and body None
+Deleting payment 349c5331-9c91-43ba-90ee-3046c12f7f81
+Response is parsed with status 404 and body None
+Deleting payment 99d5ad4c-dbae-4284-9ab1-9ba1d41756f5
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_process_payment.py::test_cannot_process_with_non_admin</td>
+          <td class="col-duration">1.01</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>Creating payment with body {&quot;purchase&quot;: 891, &quot;amount&quot;: 10.0, &quot;currency&quot;: &quot;EUR&quot;}
+Response is parsed with status 201 and body {&#x27;amount&#x27;: 10.0, &#x27;currency&#x27;: &#x27;EUR&#x27;, &#x27;name&#x27;: &#x27;john&#x27;, &#x27;paymentId&#x27;: &#x27;a14af56f-d822-42d2-b10a-606b2df6130f&#x27;, &#x27;processed&#x27;: False, &#x27;purchase&#x27;: 891}
+Processing payments
+Response is parsed with status 403 and body None
+<br/> ----------------------------Captured stdout teardown---------------------------- <br/>Deleting payment 1b7120c4-10bc-4992-90ba-f5d07777691d
+Response is parsed with status 404 and body None
+Deleting payment 56d358a9-bc3d-4550-a4ed-14a87677bdbb
+Response is parsed with status 404 and body None
+Deleting payment d89e23c9-c0b8-441c-8004-7b6b3363790a
+Response is parsed with status 404 and body None
+Deleting payment 349c5331-9c91-43ba-90ee-3046c12f7f81
+Response is parsed with status 404 and body None
+Deleting payment 99d5ad4c-dbae-4284-9ab1-9ba1d41756f5
+Response is parsed with status 404 and body None
+Deleting payment ec0a2bd6-4e13-4927-8873-475556bbf155
+Response is parsed with status 204 and body b&#x27;&#x27;
+Deleting payment 78b0104a-919b-4cbc-9da5-9c144bd49341
+Response is parsed with status 204 and body b&#x27;&#x27;
+Deleting payment d347031a-f0f8-4ae2-8d81-4cdf06f92069
+Response is parsed with status 204 and body b&#x27;&#x27;
+<br/></div></td></tr></tbody></table></body></html>

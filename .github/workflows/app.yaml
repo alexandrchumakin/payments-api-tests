@@ -21,7 +21,7 @@ jobs:
       - name: Copy report
         run: |
           mkdir public
-          cp -r report.html public/report.html
+          cp -r report.html public/index.html
       - name: Deploy report page
         uses: peaceiris/actions-gh-pages@v3
         with:

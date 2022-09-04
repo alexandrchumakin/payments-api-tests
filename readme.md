@@ -12,8 +12,5 @@ Current version of tests are done to show all the fixes in the initial app deplo
   - pip install -r requirements.txt 
 
 ## Run test
-Without any additional output: `pytest pytests/`
-
-With all logs: `pytest -s pytests/`
-
-With htlm-report generation: `pytest --html=report.html --self-contained-html pytests/`
+ - locally with pre-setup above: `python main.py` (it will produce report.html in a root of this project)
+ - in CI via GitHub Actions. Latest test report can be found [here](https://alexandrchumakin.github.io/payments-api-tests/)

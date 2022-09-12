@@ -1,8 +1,10 @@
 import requests
+import urllib3
 from requests.auth import HTTPBasicAuth
 
 from clients import parse_response
-from model.payments import get_payments_from_list
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class ApiClient:
@@ -10,7 +12,7 @@ class ApiClient:
         self.user = user
         self.auth = HTTPBasicAuth(user, password)
         self.headers = {'Content-type': 'application/json'}
-        self.host = 'http://localhost:5000'
+        self.host = 'https://alexandrchumakin-finance-app.builtwithdark.com'
         self.base_path = '/finance/api/v1.0/payments'
 
     def create_payment(self, body):
@@ -29,9 +31,7 @@ class ApiClient:
         print("Retrieving all payments")
         path = f"{self.host}{self.base_path}"
         r = requests.get(path, headers=self.headers, verify=False, auth=self.auth)
-        parsed_resp = parse_response(r)
-        parsed_resp.body = get_payments_from_list(parsed_resp.body['payments'])
-        return parsed_resp
+        return parse_response(r)
 
     def delete_payment(self, payment_id):
         print(f"Deleting payment {payment_id}")

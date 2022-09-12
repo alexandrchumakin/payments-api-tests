@@ -21,5 +21,7 @@ var/
 .venv/
 .idea/
 .pytest_cache
-pytests/.pytest_cache
+tests/.pytest_cache
 *.iml
+nosetests.xml
+report.html
